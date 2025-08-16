@@ -1,0 +1,4 @@
+# Requested ignores
+.qodo/
+venv/
+IMPROVEMENT_ROADMAP.md
