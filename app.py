@@ -11,7 +11,7 @@ from utils.exceptions import ResumeProcessingError
 
 # Configure Streamlit page
 st.set_page_config(
-    page_title="AI Recruiter Agency",
+    page_title="AlignMinds",
     page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -89,7 +89,7 @@ def main():
             "https://img.icons8.com/resume",
             width=50,
         )
-        st.title("AI Recruiter Agency")
+        st.title("AlignMinds")
         selected = option_menu(
             menu_title="Navigation",
             options=["Upload Resume", "About"],
@@ -225,10 +225,10 @@ def main():
                 logger.error(f"Upload error: {str(e)}", exc_info=True)
 
     elif selected == "About":
-        st.header("About AI Recruiter Agency")
+        st.header("About AlignMinds")
         st.write(
             """
-        Welcome to AI Recruiter Agency, a cutting-edge recruitment analysis system powered by:
+        Welcome to AlignMinds, a cutting-edge recruitment analysis system powered by:
         
         - **Ollama (llama3.2)**: Advanced language model for natural language processing
         - **Swarm Framework**: Coordinated AI agents for specialized tasks
