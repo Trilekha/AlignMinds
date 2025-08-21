@@ -1,13 +1,29 @@
-# Streamlit Web Application
+# Enhanced Streamlit Web Application for AlignMinds
 import streamlit as st
 import asyncio
 import os
 from datetime import datetime
 from pathlib import Path
-from streamlit_option_menu import option_menu
 from agents.orchestrator import OrchestratorAgent
 from utils.logger import setup_logger
 from utils.exceptions import ResumeProcessingError
+from ui.styles import apply_enhanced_styles
+from ui.components import (
+    render_header,
+    render_sidebar,
+    render_file_uploader,
+    render_progress_section,
+    render_job_match_card,
+    render_analysis_metrics,
+    render_screening_score,
+    render_recommendation_card,
+    render_upload_success,
+    render_loading_status,
+    render_results_header,
+    render_empty_state,
+    render_analytics_dashboard,
+    render_structured_analysis,
+)
 
 # Configure Streamlit page
 st.set_page_config(
@@ -20,31 +36,8 @@ st.set_page_config(
 # Initialize logger
 logger = setup_logger()
 
-# Custom CSS
-st.markdown(
-    """
-    <style>
-        .stProgress .st-bo {
-            background-color: #00a0dc;
-        }
-        .success-text {
-            color: #00c853;
-        }
-        .warning-text {
-            color: #ffd700;
-        }
-        .error-text {
-            color: #ff5252;
-        }
-        .st-emotion-cache-1v0mbdj.e115fcil1 {
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            padding: 20px;
-        }
-    </style>
-""",
-    unsafe_allow_html=True,
-)
+# Apply enhanced styles
+apply_enhanced_styles()
 
 
 async def process_resume(file_path: str) -> dict:
@@ -83,114 +76,107 @@ def save_uploaded_file(uploaded_file) -> str:
 
 
 def main():
-    # Sidebar navigation
-    with st.sidebar:
-        st.image(
-            "https://img.icons8.com/resume",
-            width=50,
-        )
-        st.title("AlignMinds")
-        selected = option_menu(
-            menu_title="Navigation",
-            options=["Upload Resume", "About"],
-            icons=["cloud-upload", "info-circle"],
-            menu_icon="cast",
-            default_index=0,
-        )
+    # Render sidebar navigation
+    selected = render_sidebar()
 
     if selected == "Upload Resume":
-        st.header("📄 Resume Analysis")
-        st.write("Upload a resume to get AI-powered insights and job matches.")
-
-        uploaded_file = st.file_uploader(
-            "Choose a PDF resume file",
-            type=["pdf"],
-            help="Upload a PDF resume to analyze",
-        )
+        # Main header
+        render_header()
+        
+        # File upload section
+        uploaded_file = render_file_uploader()
 
         if uploaded_file:
             try:
+                # Show upload success
+                render_upload_success(uploaded_file.name)
+                
                 with st.spinner("Saving uploaded file..."):
                     file_path = save_uploaded_file(uploaded_file)
 
-                st.info("Resume uploaded successfully! Processing...")
-
-                # Create placeholder for progress bar
+                # Create progress tracking
+                render_progress_section()
                 progress_bar = st.progress(0)
-                status_text = st.empty()
+                status_placeholder = st.empty()
 
-                # Process resume
+                # Process resume with enhanced UI
                 try:
-                    status_text.text("Analyzing resume...")
-                    progress_bar.progress(25)
-
+                    # Stage 1: Extraction
+                    with status_placeholder.container():
+                        render_loading_status("extraction", 20)
+                    progress_bar.progress(20)
+                    
                     # Run analysis asynchronously
                     result = asyncio.run(process_resume(file_path))
 
                     if result["status"] == "completed":
                         progress_bar.progress(100)
-                        status_text.text("Analysis complete!")
+                        
+                        # Show completion header
+                        render_results_header()
 
-                        # Display results in tabs
+                        # Enhanced results display
                         tab1, tab2, tab3, tab4 = st.tabs(
                             [
-                                "📊 Analysis",
+                                "📊 Analysis Results",
                                 "💼 Job Matches",
-                                "🎯 Screening",
-                                "💡 Recommendation",
+                                "🎯 Screening Report",
+                                "💡 Final Recommendation",
                             ]
                         )
 
                         with tab1:
-                            st.subheader("Skills Analysis")
-                            st.write(result["analysis_results"]["skills_analysis"])
-                            st.metric(
-                                "Confidence Score",
-                                f"{result['analysis_results']['confidence_score']:.0%}",
-                            )
+                            st.markdown("### Skills & Profile Analysis")
+                            
+                            # Enhanced metrics display
+                            render_analysis_metrics(result["analysis_results"])
+                            
+                            # Structured analysis sections
+                            render_structured_analysis(result["analysis_results"]["skills_analysis"])
 
                         with tab2:
-                            st.subheader("Matched Positions")
+                            st.markdown("### 🎯 Matched Job Opportunities")
+                            
                             if not result["job_matches"]["matched_jobs"]:
-                                st.warning("No suitable positions found.")
-
-                            seen_titles = (
-                                set()
-                            )  # Track seen job titles to avoid duplicates
-
-                            for job in result["job_matches"]["matched_jobs"]:
-                                if job["title"] in seen_titles:
-                                    continue
-                                seen_titles.add(job["title"])
-
-                                with st.container():
-                                    col1, col2, col3 = st.columns([2, 1, 1])
-                                    with col1:
-                                        st.write(f"**{job['title']}**")
-                                    with col2:
-                                        st.write(
-                                            f"Match: {job.get('match_score', 'N/A')}"
-                                        )
-                                    with col3:
-                                        st.write(f"📍 {job.get('location', 'N/A')}")
-                                st.divider()
+                                render_empty_state("No suitable positions found at this time", "🔍")
+                            else:
+                                seen_titles = set()
+                                job_count = 0
+                                
+                                for job in result["job_matches"]["matched_jobs"]:
+                                    if job["title"] in seen_titles:
+                                        continue
+                                    seen_titles.add(job["title"])
+                                    render_job_match_card(job, job_count)
+                                    job_count += 1
 
                         with tab3:
-                            st.subheader("Screening Results")
-                            st.metric(
-                                "Screening Score",
-                                f"{result['screening_results']['screening_score']}%",
+                            st.markdown("### 📋 Candidate Screening")
+                            
+                            # Enhanced screening display
+                            screening_score = result["screening_results"]["screening_score"]
+                            render_screening_score(screening_score)
+                            
+                            # Screening report in a card
+                            st.markdown(
+                                f"""
+                                <div class="custom-card fade-in-up">
+                                    <h4>📝 Detailed Report</h4>
+                                    <div style="background: #f8fafc; padding: 1.5rem; border-radius: 10px; margin-top: 1rem; line-height: 1.6;">
+                                        {result["screening_results"]["screening_report"]}
+                                    </div>
+                                </div>
+                                """,
+                                unsafe_allow_html=True,
                             )
-                            st.write(result["screening_results"]["screening_report"])
 
                         with tab4:
-                            st.subheader("Final Recommendation")
-                            st.info(
-                                result["final_recommendation"]["final_recommendation"],
-                                icon="💡",
+                            st.markdown("### 🎯 Hiring Recommendation")
+                            render_recommendation_card(
+                                result["final_recommendation"]["final_recommendation"]
                             )
 
-                        # Save results
+                        # Save results with success message
                         output_dir = Path("results")
                         output_dir.mkdir(exist_ok=True)
                         output_file = (
@@ -201,16 +187,35 @@ def main():
                         with open(output_file, "w") as f:
                             f.write(str(result))
 
-                        st.success(f"Results saved to: {output_file}")
-
                     else:
-                        st.error(
-                            f"Process failed at stage: {result['current_stage']}\n"
-                            f"Error: {result.get('error', 'Unknown error')}"
+                        st.markdown(
+                            f"""
+                            <div class="custom-card" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-color: #ef4444;">
+                                <div style="display: flex; align-items: center;">
+                                    <span style="background: #ef4444; color: white; padding: 0.75rem; border-radius: 50%; margin-right: 1rem;">⚠️</span>
+                                    <div>
+                                        <h4 style="margin: 0; color: #dc2626;">Processing Failed</h4>
+                                        <p style="margin: 0; color: #b91c1c;">Stage: {result['current_stage']}</p>
+                                        <p style="margin: 0; color: #b91c1c;">Error: {result.get('error', 'Unknown error')}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
                         )
 
                 except Exception as e:
-                    st.error(f"Error processing resume: {str(e)}")
+                    st.markdown(
+                        f"""
+                        <div class="custom-card" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-color: #ef4444;">
+                            <div style="text-align: center; padding: 1rem;">
+                                <h4 style="color: #dc2626;">❌ Processing Error</h4>
+                                <p style="color: #b91c1c;">{str(e)}</p>
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
+                    )
                     logger.error(f"Processing error: {str(e)}", exc_info=True)
 
                 finally:
@@ -221,30 +226,22 @@ def main():
                         logger.error(f"Error removing temporary file: {str(e)}")
 
             except Exception as e:
-                st.error(f"Error handling file upload: {str(e)}")
+                st.markdown(
+                    f"""
+                    <div class="custom-card" style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border-color: #ef4444;">
+                        <div style="text-align: center; padding: 1rem;">
+                            <h4 style="color: #dc2626;">❌ Upload Error</h4>
+                            <p style="color: #b91c1c;">{str(e)}</p>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
                 logger.error(f"Upload error: {str(e)}", exc_info=True)
 
-    elif selected == "About":
-        st.header("About AlignMinds")
-        st.write(
-            """
-        Welcome to AlignMinds, a cutting-edge recruitment analysis system powered by:
-        
-        - **Ollama (llama3.2)**: Advanced language model for natural language processing
-        - **Swarm Framework**: Coordinated AI agents for specialized tasks
-        - **Streamlit**: Modern web interface for easy interaction
-        
-        Our system uses specialized AI agents to:
-        1. 📄 Extract information from resumes
-        2. 🔍 Analyze candidate profiles
-        3. 🎯 Match with suitable positions
-        4. 👥 Screen candidates
-        5. 💡 Provide detailed recommendations
-        
-        Upload a resume to experience AI-powered recruitment analysis!
-        """
-        )
+    elif selected == "Analytics Dashboard":
+        render_analytics_dashboard()
 
 
 if __name__ == "__main__":
-    main()
+    main() 

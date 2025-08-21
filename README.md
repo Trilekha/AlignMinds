@@ -72,7 +72,7 @@ AlignMinds uses a **multi-agent architecture** where specialized AI agents work 
 
 1. **Start the application**
    ```bash
-   streamlit run app.py
+   streamlit run home.py
    ```
 
 2. **Open your browser** and navigate to `http://localhost:8501`
