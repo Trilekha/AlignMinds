@@ -11,6 +11,12 @@ An AI-powered recruitment analysis system that uses specialized AI agents to ana
 - **💡 Recommendations**: Detailed insights and hiring recommendations
 - **🌐 Modern Web Interface**: Beautiful Streamlit-based UI with real-time progress
 
+## Demo 🎬
+
+📹 **[Watch the Demo Video](https://drive.google.com/file/d/15IZ8kDSqYc-iVNSi3M6s5XZL0HleIlrF/view?usp=sharing)**
+
+See AlignMinds in action with a complete walkthrough of the AI recruitment analysis system.
+
 ## Architecture 🏗️
 
 AlignMinds uses a **multi-agent architecture** where specialized AI agents work together:
@@ -72,7 +78,7 @@ AlignMinds uses a **multi-agent architecture** where specialized AI agents work 
 
 1. **Start the application**
    ```bash
-   streamlit run home.py
+   streamlit run app.py
    ```
 
 2. **Open your browser** and navigate to `http://localhost:8501`
